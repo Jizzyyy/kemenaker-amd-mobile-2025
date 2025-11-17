@@ -4,15 +4,15 @@ Aplikasi pencatatan keuangan pribadi berbasis Flutter dengan state management Ge
 
 ## Fitur Utama
 
-- ✅ **Dashboard Keuangan** - Menampilkan ringkasan total saldo, pemasukan, dan pengeluaran
-- ✅ **Tambah Transaksi** - Mencatat transaksi pemasukan dan pengeluaran
-- ✅ **Edit Transaksi** - Mengubah data transaksi yang sudah ada
-- ✅ **Hapus Transaksi** - Menghapus transaksi yang tidak diperlukan
-- ✅ **Detail Transaksi** - Melihat detail lengkap dari setiap transaksi
-- ✅ **Filter Transaksi** - Filter berdasarkan tipe (Semua, Pemasukan, Pengeluaran)
-- ✅ **Kategori Transaksi** - Kategorisasi transaksi untuk pemasukan dan pengeluaran
-- ✅ **Penyimpanan Lokal** - Data disimpan menggunakan SQLite
-- ✅ **Format Rupiah** - Tampilan mata uang dalam format Rupiah (Rp)
+- **Dashboard Keuangan** - Menampilkan ringkasan total saldo, pemasukan, dan pengeluaran
+- **Tambah Transaksi** - Mencatat transaksi pemasukan dan pengeluaran
+- **Edit Transaksi** - Mengubah data transaksi yang sudah ada
+- **Hapus Transaksi** - Menghapus transaksi yang tidak diperlukan
+- **Detail Transaksi** - Melihat detail lengkap dari setiap transaksi
+- **Filter Transaksi** - Filter berdasarkan tipe (Semua, Pemasukan, Pengeluaran)
+- **Kategori Transaksi** - Kategorisasi transaksi untuk pemasukan dan pengeluaran
+- **Penyimpanan Lokal** - Data disimpan menggunakan SQLite
+- **Format Rupiah** - Tampilan mata uang dalam format Rupiah (Rp)
 
 ## Teknologi yang Digunakan
 
