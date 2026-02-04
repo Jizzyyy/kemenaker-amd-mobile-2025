@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/gradient_theme.dart';
 import '../../../../core/utils/formatters.dart';
 
@@ -16,137 +17,191 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        gradient: GradientTheme.cardGradient,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
+      margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        // Dark mode: Dark surface with border (like unselected filter chip)
+        color: isDark
+            ? GradientTheme.darkSurface // Dark Surface (#1E293B)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(24.r),
+        border: isDark
+            ? Border.all(
+                color: GradientTheme.darkBorder, // Dark border
+                width: 1,
+              )
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Color(0x402196F3),
-            blurRadius: 12,
-            offset: Offset(0, 6),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          const Text(
-            'Total Saldo',
-            style: TextStyle(
-              fontFamily: 'SFBold',
-              color: Colors.white70,
-              fontSize: 20,
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          children: [
+            // Total Saldo Section
+            Text(
+              'Total Saldo',
+              style: TextStyle(
+                fontFamily: 'SFRegular',
+                color: isDark
+                    ? GradientTheme.darkTextSecondary
+                    : GradientTheme.lightTextSecondary,
+                fontSize: 16.sp,
+                letterSpacing: 0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            CurrencyFormatter.format(balance),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontFamily: 'SFBold',
+            SizedBox(height: 8.h),
+            Text(
+              CurrencyFormatter.format(balance),
+              style: TextStyle(
+                color: isDark
+                    ? GradientTheme.darkTextPrimary
+                    : GradientTheme.lightTextPrimary,
+                fontSize: 32.sp,
+                fontFamily: 'SFBold',
+                letterSpacing: 0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _SummaryItem(
-                  label: 'Pemasukan',
-                  amount: totalIncome,
-                  icon: Icons.arrow_downward,
-                  gradient: GradientTheme.incomeGradient,
+
+            // Divider
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    isDark
+                        ? GradientTheme.darkBorder.withOpacity(0.5)
+                        : Colors.grey.withOpacity(0.3),
+                    Colors.transparent,
+                  ],
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _SummaryItem(
-                  label: 'Pengeluaran',
-                  amount: totalExpense,
-                  icon: Icons.arrow_upward,
-                  gradient: GradientTheme.expenseGradient,
+            ),
+
+            // Income & Expense Row
+            Row(
+              children: [
+                // Income
+                Expanded(
+                  child: _buildStatItem(
+                    icon: Icons.arrow_downward,
+                    label: 'Pemasukan',
+                    amount: totalIncome,
+                    iconColor: isDark
+                        ? GradientTheme.darkPrimary // #2DD4BF Teal Pastel
+                        : GradientTheme.lightPrimary, // #009688 Teal
+                    isDark: isDark,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+
+                // Vertical Divider
+                Container(
+                  width: 1,
+                  height: 50.h,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        isDark
+                            ? GradientTheme.darkBorder.withOpacity(0.5)
+                            : Colors.grey.withOpacity(0.3),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+
+                // Expense
+                Expanded(
+                  child: _buildStatItem(
+                    icon: Icons.arrow_upward,
+                    label: 'Pengeluaran',
+                    amount: totalExpense,
+                    iconColor: isDark
+                        ? GradientTheme.darkAccent // #FB7185 Soft Rose
+                        : GradientTheme.lightAccent, // #FF7043 Coral
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-class _SummaryItem extends StatelessWidget {
-  final String label;
-  final double amount;
-  final IconData icon;
-  final LinearGradient gradient;
-
-  const _SummaryItem({
-    required this.label,
-    required this.amount,
-    required this.icon,
-    required this.gradient,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontFamily: 'SFSemibold',
-                  letterSpacing: 0.3,
-                ),
+  Widget _buildStatItem({
+    required IconData icon,
+    required String label,
+    required double amount,
+    required Color iconColor,
+    required bool isDark,
+  }) {
+    return Column(
+      children: [
+        // Icon Circle - Colored for information
+        Container(
+          padding: EdgeInsets.all(10.w),
+          decoration: BoxDecoration(
+            color: iconColor,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: iconColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            CurrencyFormatter.format(amount),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontFamily: 'SFBold',
-              letterSpacing: 0.5,
-            ),
-            textAlign: TextAlign.center,
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 20.sp,
           ),
-        ],
-      ),
+        ),
+
+        SizedBox(height: 12.h),
+
+        // Label
+        Text(
+          label,
+          style: TextStyle(
+            color: isDark
+                ? GradientTheme.darkTextSecondary
+                : GradientTheme.lightTextSecondary,
+            fontSize: 12.sp,
+            fontFamily: 'SFRegular',
+          ),
+        ),
+
+        SizedBox(height: 4.h),
+
+        // Amount - Colored for information
+        Text(
+          CurrencyFormatter.format(amount),
+          style: TextStyle(
+            color: iconColor,
+            fontSize: 18.sp,
+            fontFamily: 'SFBold',
+            letterSpacing: 0.3,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 }

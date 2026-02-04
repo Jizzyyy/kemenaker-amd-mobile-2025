@@ -20,7 +20,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateToNext() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
+    // Splash screen duration - adjust this value to change how long splash shows
+    await Future.delayed(const Duration(milliseconds: 3500)); // 3.5 seconds
 
     if (!mounted) return;
 
@@ -38,27 +39,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: isDark ? GradientTheme.darkBackground : Colors.white,
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Spacer(),
+
               // App Icon/Logo with smooth animations
               Image.asset(
                 'assets/images/app_icon.png',
-                width: 190.w,
-                height: 190.w,
+                width: 385.w,
+                height: 385.w,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    width: 190.w,
-                    height: 190.w,
+                    width: 385.w,
+                    height: 385.w,
                     decoration: BoxDecoration(
-                      gradient: GradientTheme.primaryGradient,
+                      gradient: isDark
+                          ? GradientTheme.primaryGradientDark
+                          : GradientTheme.primaryGradient,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -80,29 +87,57 @@ class _SplashScreenState extends State<SplashScreen> {
                   .then(delay: 200.ms)
                   .shimmer(
                     duration: 1200.ms,
-                    color: Colors.white.withOpacity(0.3),
+                    color: (isDark ? GradientTheme.darkPrimary : Colors.white)
+                        .withOpacity(0.3),
                   ),
               SizedBox(height: 24.h),
 
-              // App Name with gradient and fade/slide animation
-              ShaderMask(
-                shaderCallback: (bounds) =>
-                    GradientTheme.primaryGradient.createShader(bounds),
-                child: Text(
-                  'Aplikasi Pencatatan Keuangan',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontFamily: 'SFSemibold',
-                    color: Colors.white,
-                  ),
+              const Spacer(),
+
+              // Developer Credit
+              Padding(
+                padding: EdgeInsets.only(bottom: 40.h),
+                child: Column(
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (bounds) => (isDark
+                              ? GradientTheme.primaryGradientDark
+                              : GradientTheme.primaryGradient)
+                          .createShader(bounds),
+                      child: Text(
+                        'Developed by',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontFamily: 'SFRegular',
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 1.h),
+                    ShaderMask(
+                      shaderCallback: (bounds) => (isDark
+                              ? GradientTheme.primaryGradientDark
+                              : GradientTheme.primaryGradient)
+                          .createShader(bounds),
+                      child: Text(
+                        'arctic moon',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontFamily: 'SFSemibold',
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ).animate().fadeIn(delay: 400.ms, duration: 600.ms).slideY(
-                    begin: 0.3,
+              ).animate().fadeIn(delay: 800.ms, duration: 600.ms).slideY(
+                    begin: 0.5,
                     end: 0,
                     duration: 600.ms,
                     curve: Curves.easeOut,
                   ),
-              SizedBox(height: 8.h),
             ],
           ),
         ),

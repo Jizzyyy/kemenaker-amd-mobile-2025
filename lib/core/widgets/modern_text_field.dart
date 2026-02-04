@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../theme/gradient_theme.dart';
 
 /// Modern, smooth text field with subtle shadows and animations
 class ModernTextField extends StatefulWidget {
@@ -39,6 +40,8 @@ class _ModernTextFieldState extends State<ModernTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
@@ -46,14 +49,17 @@ class _ModernTextFieldState extends State<ModernTextField> {
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: const Color(0xFF667eea).withOpacity(0.15),
+                  color: (isDark
+                          ? GradientTheme.darkPrimary
+                          : const Color(0xFF667eea))
+                      .withOpacity(0.15),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
               ]
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -73,35 +79,48 @@ class _ModernTextFieldState extends State<ModernTextField> {
           obscureText: widget.obscureText,
           validator: widget.validator,
           onChanged: widget.onChanged,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'SFMedium',
             fontSize: 16,
             height: 1.5,
+            color: isDark ? GradientTheme.darkTextPrimary : Colors.black87,
           ),
           decoration: InputDecoration(
             hintText: widget.hintText,
             labelText: widget.labelText,
             hintStyle: TextStyle(
               fontFamily: 'SFRegular',
-              color: Colors.grey[400],
+              color:
+                  isDark ? GradientTheme.darkTextSecondary : Colors.grey[400],
               fontSize: 15,
             ),
             labelStyle: TextStyle(
               fontFamily: 'SFSemibold',
-              color: _isFocused ? const Color(0xFF667eea) : Colors.grey[600],
+              color: _isFocused
+                  ? (isDark
+                      ? GradientTheme.darkPrimary
+                      : const Color(0xFF667eea))
+                  : (isDark
+                      ? GradientTheme.darkTextSecondary
+                      : Colors.grey[600]),
               fontSize: 14,
             ),
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color:
-                        _isFocused ? const Color(0xFF667eea) : Colors.grey[400],
+                    color: _isFocused
+                        ? (isDark
+                            ? GradientTheme.darkPrimary
+                            : const Color(0xFF667eea))
+                        : (isDark
+                            ? GradientTheme.darkTextSecondary
+                            : Colors.grey[400]),
                     size: 22,
                   )
                 : null,
             suffixIcon: widget.suffixIcon,
             filled: true,
-            fillColor: Colors.grey[50],
+            fillColor: isDark ? GradientTheme.darkSurface : Colors.grey[50],
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 18,
@@ -113,28 +132,32 @@ class _ModernTextFieldState extends State<ModernTextField> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Colors.grey[200]!,
+                color: isDark ? GradientTheme.darkBorder : Colors.grey[200]!,
                 width: 1.5,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: Color(0xFF667eea),
+              borderSide: BorderSide(
+                color: isDark
+                    ? GradientTheme.darkPrimary
+                    : const Color(0xFF667eea),
                 width: 2,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: Color(0xFFf5576c),
+              borderSide: BorderSide(
+                color:
+                    isDark ? GradientTheme.darkAccent : const Color(0xFFf5576c),
                 width: 1.5,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: Color(0xFFf5576c),
+              borderSide: BorderSide(
+                color:
+                    isDark ? GradientTheme.darkAccent : const Color(0xFFf5576c),
                 width: 2,
               ),
             ),

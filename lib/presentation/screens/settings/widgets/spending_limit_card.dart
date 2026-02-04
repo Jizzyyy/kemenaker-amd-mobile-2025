@@ -75,13 +75,15 @@ class _SpendingLimitCardState extends State<SpendingLimitCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1e2538) : Colors.white,
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -239,108 +241,142 @@ class _SpendingLimitCardState extends State<SpendingLimitCard> {
 
           // Expanded Content
           if (_isExpanded)
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(20),
+            Builder(builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              return Container(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                decoration: BoxDecoration(
+                  color:
+                      isDark ? GradientTheme.darkBackground : Colors.grey[50],
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Divider(),
-                  const SizedBox(height: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(),
+                    const SizedBox(height: 16),
 
-                  // Amount Input
-                  const Text(
-                    'Jumlah Batas',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: 'SFSemibold',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _amountController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [CurrencyInputFormatter()],
-                    enabled: _isEnabled,
-                    style: const TextStyle(
-                      fontFamily: 'SFSemibold',
-                      fontSize: 16,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Masukkan jumlah batas',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[400],
-                        fontFamily: 'SFRegular',
-                      ),
-                      prefixIcon: const Icon(Icons.attach_money),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Colors.grey[300]!,
-                          width: 1,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF667eea),
-                          width: 2,
-                        ),
+                    // Amount Input
+                    const Text(
+                      'Jumlah Batas',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: 'SFSemibold',
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Save Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: _isEnabled ? _handleSave : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 8),
+                    Builder(builder: (context) {
+                      final isDark =
+                          Theme.of(context).brightness == Brightness.dark;
+                      return TextField(
+                        controller: _amountController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [CurrencyInputFormatter()],
+                        enabled: _isEnabled,
+                        style: TextStyle(
+                          fontFamily: 'SFSemibold',
+                          fontSize: 16,
+                          color: isDark
+                              ? GradientTheme.darkTextPrimary
+                              : Colors.black87,
                         ),
-                      ),
-                      child: Ink(
-                        decoration: BoxDecoration(
-                          gradient:
-                              _isEnabled ? GradientTheme.primaryGradient : null,
-                          color: _isEnabled ? null : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Simpan',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontFamily: 'SFBold',
-                              color:
-                                  _isEnabled ? Colors.white : Colors.grey[500],
+                        decoration: InputDecoration(
+                          hintText: 'Masukkan jumlah batas',
+                          hintStyle: TextStyle(
+                            color: isDark
+                                ? GradientTheme.darkTextSecondary
+                                : Colors.grey[400],
+                            fontFamily: 'SFRegular',
+                          ),
+                          prefixIcon: Icon(
+                            Icons.attach_money,
+                            color:
+                                isDark ? GradientTheme.darkTextSecondary : null,
+                          ),
+                          filled: true,
+                          fillColor:
+                              isDark ? GradientTheme.darkSurface : Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: isDark
+                                  ? GradientTheme.darkBorder
+                                  : Colors.grey[300]!,
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: isDark
+                                  ? GradientTheme.darkPrimary
+                                  : const Color(0xFF667eea),
+                              width: 2,
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                      );
+                    }),
+                    const SizedBox(height: 16),
+
+                    // Save Button
+                    Builder(builder: (context) {
+                      final isDark =
+                          Theme.of(context).brightness == Brightness.dark;
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _isEnabled ? _handleSave : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              gradient: _isEnabled
+                                  ? (isDark
+                                      ? GradientTheme.primaryGradientDark
+                                      : GradientTheme.primaryGradient)
+                                  : null,
+                              color: _isEnabled
+                                  ? null
+                                  : (isDark
+                                      ? GradientTheme.darkBorder
+                                      : Colors.grey[300]),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Container(
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Simpan',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontFamily: 'SFBold',
+                                  color: _isEnabled
+                                      ? Colors.white
+                                      : Colors.grey[500],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );

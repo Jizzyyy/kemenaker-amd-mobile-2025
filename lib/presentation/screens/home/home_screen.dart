@@ -6,7 +6,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../../core/theme/gradient_theme.dart';
 import '../../../domain/entities/transaction.dart';
+import '../../../core/services/payment_notification_importer.dart';
+import '../../../core/services/payment_notification_channel.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/draft_transaction_provider.dart';
 import 'widgets/summary_card.dart';
 import 'widgets/filter_chip_widget.dart';
 import 'widgets/transaction_item.dart';
@@ -19,19 +22,48 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
+  late final PaymentNotificationImporter _notificationImporter;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _notificationImporter = PaymentNotificationImporter(
+      channel: PaymentNotificationChannel(),
+    );
     // Load transactions when screen initializes
     Future.microtask(
       () => ref.read(transactionNotifierProvider.notifier).loadTransactions(),
     );
+    Future.microtask(
+      () => ref.read(draftTransactionNotifierProvider.notifier).loadDrafts(),
+    );
+    Future.microtask(() => _importPendingDrafts());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _importPendingDrafts();
+    }
+  }
+
+  Future<void> _importPendingDrafts() async {
+    await _notificationImporter.importPending(ref);
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(transactionNotifierProvider);
+    final draftState = ref.watch(draftTransactionNotifierProvider);
     final notifier = ref.read(transactionNotifierProvider.notifier);
 
     // Show error snackbar if there's an error
@@ -55,6 +87,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: 'Pencatatan Keuangan',
         actions: [
           IconButton(
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.inbox, color: Colors.white),
+                if (draftState.drafts.isNotEmpty)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFF5252),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: () => context.push('/draft-transactions'),
+          ),
+          IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () => context.push('/settings'),
           ),
@@ -75,7 +129,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Filter Buttons
               Padding(
-                padding: EdgeInsets.all(16.w),
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
                 child: Row(
                   children: [
                     FilterChipWidget(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -73,16 +74,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.w),
                 child: TextButton(
                   onPressed: _completeOnboarding,
                   child: ShaderMask(
                     shaderCallback: (bounds) =>
                         GradientTheme.primaryGradient.createShader(bounds),
-                    child: const Text(
+                    child: Text(
                       'Lewati',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 16.sp,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -111,13 +112,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
             // Page Indicator
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: EdgeInsets.symmetric(vertical: 16.h),
               child: SmoothPageIndicator(
                 controller: _pageController,
                 count: _pages.length,
                 effect: WormEffect(
-                  dotHeight: 12,
-                  dotWidth: 12,
+                  dotHeight: 10.h,
+                  dotWidth: 10.w,
                   activeDotColor: const Color(0xFF2196F3),
                   dotColor: Colors.grey.shade300,
                 ),
@@ -126,16 +127,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
             // Next/Start Button
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(20.w),
               child: GradientButton(
                 text:
                     _currentPage == _pages.length - 1 ? 'Mulai' : 'Selanjutnya',
                 onPressed: _nextPage,
                 width: double.infinity,
-                height: 56,
-                borderRadius: 16,
-                textStyle: const TextStyle(
-                  fontSize: 18,
+                height: 54.h,
+                borderRadius: 16.r,
+                textStyle: TextStyle(
+                  fontSize: 17.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -148,58 +149,64 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildPage(OnboardingPage page) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Icon with gradient
-          Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  page.color.withOpacity(0.2),
-                  page.color.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 20.h),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: 40.h),
+            // Icon with gradient
+            Container(
+              width: 180.w,
+              height: 180.w,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    page.color.withOpacity(0.2),
+                    page.color.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
               ),
-              shape: BoxShape.circle,
+              child: Icon(
+                page.icon,
+                size: 90.sp,
+                color: page.color,
+              ),
             ),
-            child: Icon(
-              page.icon,
-              size: 100,
-              color: page.color,
-            ),
-          ),
-          const SizedBox(height: 48),
+            SizedBox(height: 40.h),
 
-          // Title
-          Text(
-            page.title,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'SFBold',
+            // Title
+            Text(
+              page.title,
+              style: TextStyle(
+                fontSize: 26.sp,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'SFBold',
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
+            SizedBox(height: 12.h),
 
-          // Description
-          Text(
-            page.description,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              height: 1.5,
-              fontFamily: 'SFRegular',
+            // Description
+            Text(
+              page.description,
+              style: TextStyle(
+                fontSize: 15.sp,
+                color: Colors.grey[600],
+                height: 1.5,
+                fontFamily: 'SFRegular',
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            SizedBox(height: 20.h),
+          ],
+        ),
       ),
     );
   }

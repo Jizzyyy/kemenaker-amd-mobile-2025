@@ -11,12 +11,15 @@ import '../../../core/utils/currency_input_formatter.dart';
 import '../../../core/widgets/modern_text_field.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/draft_transaction_provider.dart';
+import '../../../domain/entities/draft_transaction.dart';
 import '../../providers/spending_limit_provider.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final int? transactionId;
+  final int? draftId;
 
-  const AddTransactionScreen({super.key, this.transactionId});
+  const AddTransactionScreen({super.key, this.transactionId, this.draftId});
 
   @override
   ConsumerState<AddTransactionScreen> createState() =>
@@ -60,9 +63,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     super.initState();
     _selectedCategory = _currentCategories.first;
 
-    if (widget.transactionId != null) {
+    if (widget.transactionId != null && widget.draftId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadTransactionData();
+      });
+    }
+
+    if (widget.draftId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadDraftData();
       });
     }
   }
@@ -83,6 +92,31 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _descriptionController.text = transaction.description ?? '';
       if (transaction.imagePath != null) {
         _selectedImage = File(transaction.imagePath!);
+      }
+    });
+  }
+
+  Future<void> _loadDraftData() async {
+    final notifier = ref.read(draftTransactionNotifierProvider.notifier);
+    final draft = await notifier.fetchDraftById(widget.draftId!);
+    if (draft == null) return;
+
+    setState(() {
+      _titleController.text = draft.title;
+      _amountController.text = draft.amount.toStringAsFixed(0);
+      _selectedType = draft.type == DraftTransactionType.income
+          ? TransactionType.income
+          : TransactionType.expense;
+      final categories = _selectedType == TransactionType.income
+          ? _incomeCategories
+          : _expenseCategories;
+      _selectedCategory = categories.contains(draft.category)
+          ? draft.category
+          : categories.first;
+      _selectedDate = draft.date;
+      _descriptionController.text = draft.description ?? '';
+      if (draft.imagePath != null) {
+        _selectedImage = File(draft.imagePath!);
       }
     });
   }
@@ -217,13 +251,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
 
     final notifier = ref.read(transactionNotifierProvider.notifier);
-    final success = widget.transactionId == null
-        ? await notifier.addNewTransaction(transaction)
-        : await notifier.updateExistingTransaction(transaction);
+    final isEditing = widget.transactionId != null && widget.draftId == null;
+    final success = isEditing
+        ? await notifier.updateExistingTransaction(transaction)
+        : await notifier.addNewTransaction(transaction);
 
     if (!mounted) return;
 
     if (success) {
+      if (widget.draftId != null) {
+        await ref
+            .read(draftTransactionNotifierProvider.notifier)
+            .removeDraft(widget.draftId!);
+      }
+
       // Check spending limits and trigger notifications if needed
       final transactions = ref.read(transactionNotifierProvider).transactions;
       await ref
@@ -235,9 +276,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            widget.transactionId == null
-                ? 'Transaksi berhasil ditambahkan'
-                : 'Transaksi berhasil diupdate',
+            isEditing
+                ? 'Transaksi berhasil diupdate'
+                : 'Transaksi berhasil ditambahkan',
           ),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
@@ -357,66 +398,80 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 .fadeIn(delay: 400.ms, duration: 300.ms)
                 .slideX(begin: -0.2, end: 0),
             const SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                style: const TextStyle(
-                  fontFamily: 'SFSemibold',
-                  color: Colors.black87,
-                  fontSize: 16,
+            Builder(builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.category, size: 22),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
+                child: DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  dropdownColor: isDark ? GradientTheme.darkSurface : null,
+                  style: TextStyle(
+                    fontFamily: 'SFSemibold',
+                    color:
+                        isDark ? GradientTheme.darkTextPrimary : Colors.black87,
+                    fontSize: 16,
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(
-                      color: Colors.grey[200]!,
-                      width: 1.5,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(
+                      Icons.category,
+                      size: 22,
+                      color: isDark ? GradientTheme.darkTextSecondary : null,
+                    ),
+                    filled: true,
+                    fillColor:
+                        isDark ? GradientTheme.darkSurface : Colors.grey[50],
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? GradientTheme.darkBorder
+                            : Colors.grey[200]!,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark
+                            ? GradientTheme.darkPrimary
+                            : const Color(0xFF667eea),
+                        width: 2,
+                      ),
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF667eea),
-                      width: 2,
-                    ),
-                  ),
+                  items: _currentCategories.map((category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    }
+                  },
                 ),
-                items: _currentCategories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedCategory = value;
-                    });
-                  }
-                },
-              ),
-            )
+              );
+            })
                 .animate()
                 .fadeIn(delay: 450.ms, duration: 300.ms)
                 .slideX(begin: -0.2, end: 0),
@@ -431,43 +486,56 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 .fadeIn(delay: 500.ms, duration: 300.ms)
                 .slideX(begin: -0.2, end: 0),
             const SizedBox(height: 8),
-            InkWell(
-              onTap: _pickDate,
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  border: Border.all(color: Colors.grey[200]!, width: 1.5),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+            Builder(builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              return InkWell(
+                onTap: _pickDate,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  decoration: BoxDecoration(
+                    color: isDark ? GradientTheme.darkSurface : Colors.grey[50],
+                    border: Border.all(
+                      color:
+                          isDark ? GradientTheme.darkBorder : Colors.grey[200]!,
+                      width: 1.5,
                     ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      color: Color(0xFF667eea),
-                      size: 22,
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      DateFormat('dd MMMM yyyy', 'id_ID').format(_selectedDate),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontFamily: 'SFSemibold',
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        color: isDark
+                            ? GradientTheme.darkPrimary
+                            : const Color(0xFF667eea),
+                        size: 22,
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        DateFormat('dd MMMM yyyy', 'id_ID')
+                            .format(_selectedDate),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: 'SFSemibold',
+                          color: isDark
+                              ? GradientTheme.darkTextPrimary
+                              : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            )
+              );
+            })
                 .animate()
                 .fadeIn(delay: 550.ms, duration: 300.ms)
                 .slideX(begin: -0.2, end: 0),
@@ -541,48 +609,63 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ],
               ).animate().fadeIn(duration: 300.ms).scale()
             else
-              InkWell(
-                onTap: _showImageSourceDialog,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  width: double.infinity,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.grey[300]!,
-                      width: 2,
-                      style: BorderStyle.solid,
+              Builder(builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                return InkWell(
+                  onTap: _showImageSourceDialog,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isDark
+                            ? GradientTheme.darkBorder
+                            : Colors.grey[300]!,
+                        width: 2,
+                        style: BorderStyle.solid,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      color:
+                          isDark ? GradientTheme.darkSurface : Colors.grey[50],
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                    color: Colors.grey[50],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add_photo_alternate,
-                          size: 48, color: Colors.grey[400]),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Tap untuk menambah gambar',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontFamily: 'SFSemibold',
-                          fontSize: 15,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_photo_alternate,
+                          size: 48,
+                          color: isDark
+                              ? GradientTheme.darkTextSecondary
+                              : Colors.grey[400],
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Nota belanja atau bukti pembayaran',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[500],
-                          fontFamily: 'SFRegular',
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tap untuk menambah gambar',
+                          style: TextStyle(
+                            color: isDark
+                                ? GradientTheme.darkTextPrimary
+                                : Colors.grey[600],
+                            fontFamily: 'SFSemibold',
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          'Nota belanja atau bukti pembayaran',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark
+                                ? GradientTheme.darkTextSecondary
+                                : Colors.grey[500],
+                            fontFamily: 'SFRegular',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
+                );
+              })
                   .animate()
                   .fadeIn(delay: 750.ms, duration: 300.ms)
                   .slideX(begin: -0.2, end: 0),
@@ -621,6 +704,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     LinearGradient gradient,
   ) {
     final isSelected = _selectedType == type;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Get dark mode gradient
+    final darkGradient = type == TransactionType.expense
+        ? GradientTheme.expenseGradientDark
+        : GradientTheme.incomeGradientDark;
 
     return InkWell(
       onTap: () {
@@ -629,22 +718,29 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           _selectedCategory = _currentCategories.first;
         });
       },
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.r),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
         decoration: BoxDecoration(
-          gradient: isSelected ? gradient : null,
-          color: isSelected ? null : Colors.grey[100],
-          borderRadius: BorderRadius.circular(16),
+          gradient: isSelected ? (isDark ? darkGradient : gradient) : null,
+          color: isSelected
+              ? null
+              : (isDark ? GradientTheme.darkSurface : Colors.grey[100]),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.grey[200]!,
+            color: isSelected
+                ? Colors.transparent
+                : (isDark ? GradientTheme.darkBorder : Colors.grey[200]!),
             width: 1.5,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: gradient.colors.first.withOpacity(0.3),
+                    color: (isDark
+                            ? darkGradient.colors.first
+                            : gradient.colors.first)
+                        .withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -656,16 +752,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : Colors.grey[600],
-              size: 20,
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? GradientTheme.darkTextPrimary : Colors.grey[600]),
+              size: 20.sp,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8.w),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey[700],
+                color: isSelected
+                    ? Colors.white
+                    : (isDark
+                        ? GradientTheme.darkTextPrimary
+                        : Colors.grey[700]),
                 fontFamily: 'SFSemibold',
-                fontSize: 15,
+                fontSize: 15.sp,
               ),
             ),
           ],

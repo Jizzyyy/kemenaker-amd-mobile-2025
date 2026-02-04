@@ -12,7 +12,7 @@ class DatabaseHelper {
 
     _database = await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -33,6 +33,24 @@ class DatabaseHelper {
           period TEXT NOT NULL,
           amount REAL NOT NULL,
           is_enabled INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE draft_transactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          amount REAL NOT NULL,
+          type TEXT NOT NULL,
+          category TEXT NOT NULL,
+          date TEXT NOT NULL,
+          description TEXT,
+          imagePath TEXT,
+          source_app TEXT NOT NULL,
+          raw_text TEXT NOT NULL,
+          notification_key TEXT,
           created_at TEXT NOT NULL
         )
       ''');
@@ -63,6 +81,23 @@ class DatabaseHelper {
         period $textType,
         amount $realType,
         is_enabled INTEGER NOT NULL DEFAULT 1,
+        created_at $textType
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE draft_transactions (
+        id $idType,
+        title $textType,
+        amount $realType,
+        type $textType,
+        category $textType,
+        date $textType,
+        description TEXT,
+        imagePath TEXT,
+        source_app $textType,
+        raw_text $textType,
+        notification_key TEXT,
         created_at $textType
       )
     ''');

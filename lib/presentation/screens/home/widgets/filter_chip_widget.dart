@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/gradient_theme.dart';
 
 class FilterChipWidget extends StatelessWidget {
@@ -18,19 +19,35 @@ class FilterChipWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSelected = selectedFilter == value;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () => onFilterChanged(value),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          gradient: isSelected ? GradientTheme.primaryGradient : null,
-          color: isSelected ? null : Colors.grey[200],
-          borderRadius: BorderRadius.circular(20),
+          gradient: isSelected
+              ? (isDark
+                  ? GradientTheme.primaryGradientDark
+                  : GradientTheme.primaryGradient)
+              : null,
+          color: isSelected
+              ? null
+              : (isDark ? GradientTheme.darkSurface : Colors.grey[200]),
+          borderRadius: BorderRadius.circular(20.r),
+          border: !isSelected && isDark
+              ? Border.all(
+                  color: GradientTheme.darkBorder,
+                  width: 1,
+                )
+              : null,
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF2196F3).withOpacity(0.3),
+                    color: (isDark
+                            ? GradientTheme.darkPrimary
+                            : const Color(0xFF2196F3))
+                        .withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -40,9 +57,11 @@ class FilterChipWidget extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
-            fontFamily: 'SFSemibold',
-            fontSize: 14,
+            color: isSelected
+                ? Colors.white
+                : (isDark ? GradientTheme.darkTextPrimary : Colors.grey[700]),
+            fontFamily: 'SFRegular',
+            fontSize: 12.sp,
           ),
         ),
       ),
