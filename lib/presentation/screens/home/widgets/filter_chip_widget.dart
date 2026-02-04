@@ -33,7 +33,7 @@ class FilterChipWidget extends StatelessWidget {
               : null,
           color: isSelected
               ? null
-              : (isDark ? GradientTheme.darkSurface : Colors.grey[200]),
+              : (isDark ? GradientTheme.darkSurface : Colors.white),
           borderRadius: BorderRadius.circular(20.r),
           border: !isSelected && isDark
               ? Border.all(
@@ -60,7 +60,7 @@ class FilterChipWidget extends StatelessWidget {
             color: isSelected
                 ? Colors.white
                 : (isDark ? GradientTheme.darkTextPrimary : Colors.grey[700]),
-            fontFamily: 'SFRegular',
+            fontFamily: 'SFMedium',
             fontSize: 12.sp,
           ),
         ),

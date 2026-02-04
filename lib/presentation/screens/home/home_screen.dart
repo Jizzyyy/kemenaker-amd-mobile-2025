@@ -160,7 +160,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: state.isLoading
                     ? ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: 8.w),
                         itemCount: 5, // Show 5 skeleton items
                         itemBuilder: (context, index) {
                           return TransactionItem(
@@ -179,7 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     : state.filteredTransactions.isEmpty
                         ? const EmptyTransactionWidget()
                         : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: EdgeInsets.symmetric(horizontal: 8.w),
                             itemCount: state.filteredTransactions.length,
                             itemBuilder: (context, index) {
                               final transaction =
